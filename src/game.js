@@ -58,6 +58,10 @@ var Wallaby;
         }
         Level.prototype.create = function () {
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
+            this.zoneSprite = this.game.add.sprite(0, 0, 'zone');
+            this.zoneSprite.visible = true;
+            this.game.physics.enable(this.zoneSprite, Phaser.Physics.ARCADE);
+            this.zoneSprite.body.immovable = true;
 
             this.turtles = this.game.add.group();
             this.txt = this.game.add.group();
@@ -83,6 +87,7 @@ var Wallaby;
         Level.prototype.update = function () {
             this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime) / 1000).toString());
             this.game.physics.arcade.collide(this.turtles);
+            this.game.physics.arcade.collide(this.turtles, this.zoneSprite);
         };
         return Level;
     })(Phaser.State);
