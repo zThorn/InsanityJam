@@ -7,6 +7,7 @@
         txt: Phaser.Group;
         timeText:Phaser.Text;
         shellsCollected: Phaser.Text;
+
         initialTime: number;
       
 
@@ -25,6 +26,8 @@
                 this.game.physics.enable(this.turtle, Phaser.Physics.ARCADE);
                 this.turtle.body.velocity.x = this.game.rnd.integerInRange(-200, 200);
                 this.turtle.body.velocity.y = this.game.rnd.integerInRange(-200, 200);
+                this.turtle.inputEnabled = true;
+                this.turtle.input.enableDrag();
             }
 
             this.turtles.setAll('body.collideWorldBounds', true);
@@ -32,21 +35,39 @@
             this.turtles.setAll('body.bounce.y', 1);
             this.turtles.setAll('body.minBounceVelocity', 0);
 
+            this.turtles.callAll('events.onInputDown.add', 'events.onInputDown',this.endDrag );
+            this.turtles.callAll('events.onInputUp.add', 'events.onInputUp', this.removeCheck)
+
+
             
             this.txt.fixedToCamera = true;
             this.initialTime = this.game.time.now;
-            this.timeText = this.game.add.text(this.game.world.x,0,'Time: '+this.initialTime,
-                        {fontSize: '32px', fill: 'white', stroke: 'black',strokeThickness: 5}, this.txt);
+            this.timeText = this.game.add.text(this.game.world.x, 0,'Time: '+this.initialTime, {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
             this.txt.bringToTop(true);
 
         }
 
         update() {
-            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime)/1000).toString());
+            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime)/1000).toString()+":");
             this.game.physics.arcade.collide(this.turtles);
             this.game.physics.arcade.collide(this.turtles,this.zoneSprite);
+          
+        }
+        startDrag(){
+                this.turtle.body.moves = false;
 
         }
+
+        endDrag(temp){
+               temp.body.moves = false;          
+        }
+
+        removeCheck(temp){
+            temp.body.moves = true;
+             if(temp.x < 120 && temp.y <120)
+                    temp.kill();
+        }
+
 
      
     }

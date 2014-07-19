@@ -71,12 +71,17 @@ var Wallaby;
                 this.game.physics.enable(this.turtle, Phaser.Physics.ARCADE);
                 this.turtle.body.velocity.x = this.game.rnd.integerInRange(-200, 200);
                 this.turtle.body.velocity.y = this.game.rnd.integerInRange(-200, 200);
+                this.turtle.inputEnabled = true;
+                this.turtle.input.enableDrag();
             }
 
             this.turtles.setAll('body.collideWorldBounds', true);
             this.turtles.setAll('body.bounce.x', 1);
             this.turtles.setAll('body.bounce.y', 1);
             this.turtles.setAll('body.minBounceVelocity', 0);
+
+            this.turtles.callAll('events.onInputDown.add', 'events.onInputDown', this.endDrag);
+            this.turtles.callAll('events.onInputUp.add', 'events.onInputUp', this.removeCheck);
 
             this.txt.fixedToCamera = true;
             this.initialTime = this.game.time.now;
@@ -85,9 +90,22 @@ var Wallaby;
         };
 
         Level.prototype.update = function () {
-            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime) / 1000).toString());
+            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime) / 1000).toString() + ":");
             this.game.physics.arcade.collide(this.turtles);
             this.game.physics.arcade.collide(this.turtles, this.zoneSprite);
+        };
+        Level.prototype.startDrag = function () {
+            this.turtle.body.moves = false;
+        };
+
+        Level.prototype.endDrag = function (temp) {
+            temp.body.moves = false;
+        };
+
+        Level.prototype.removeCheck = function (temp) {
+            temp.body.moves = true;
+            if (temp.x < 120 && temp.y < 120)
+                temp.kill();
         };
         return Level;
     })(Phaser.State);
