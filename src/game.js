@@ -42,7 +42,7 @@ var Wallaby;
             this.state.add('Preloader', Wallaby.Preloader, false);
             this.state.add('MainMenu', Wallaby.MainMenu, false);
             this.state.add('Level', Wallaby.Level, false);
-
+            this.state.add('Victory', Wallaby.Victory, false);
             this.state.start('Boot');
         }
         return Game;
@@ -51,12 +51,14 @@ var Wallaby;
 })(Wallaby || (Wallaby = {}));
 var Wallaby;
 (function (Wallaby) {
+    var killed;
     var Level = (function (_super) {
         __extends(Level, _super);
         function Level() {
             _super.apply(this, arguments);
         }
         Level.prototype.create = function () {
+            killed = false;
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
             this.zoneSprite = this.game.add.sprite(0, 0, 'zone');
             this.zoneSprite.visible = true;
@@ -82,17 +84,30 @@ var Wallaby;
 
             this.turtles.callAll('events.onInputDown.add', 'events.onInputDown', this.endDrag);
             this.turtles.callAll('events.onInputUp.add', 'events.onInputUp', this.removeCheck);
+            this.shellsCollected = 0;
 
             this.txt.fixedToCamera = true;
             this.initialTime = this.game.time.now;
             this.timeText = this.game.add.text(this.game.world.x, 0, 'Time: ' + this.initialTime, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 }, this.txt);
+            this.shellText = this.game.add.text(this.game.world.x, 40, 'Shells: ', { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 }, this.txt);
             this.txt.bringToTop(true);
+            this.levelOver = false;
         };
 
         Level.prototype.update = function () {
-            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime) / 1000).toString() + ":");
+            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime) / 1000).toString());
             this.game.physics.arcade.collide(this.turtles);
             this.game.physics.arcade.collide(this.turtles, this.zoneSprite);
+            this.shellText.setText("Shells: " + this.shellsCollected);
+
+            if (this.game.time.elapsedSince(this.initialTime) / 1000 >= 30)
+                this.game.state.start('Victory', true, false, this.shellsCollected, this.game);
+
+            if (killed) {
+                killed = false;
+                this.shellsCollected++;
+                console.log(this.shellsCollected);
+            }
         };
         Level.prototype.startDrag = function () {
             this.turtle.body.moves = false;
@@ -104,8 +119,10 @@ var Wallaby;
 
         Level.prototype.removeCheck = function (temp) {
             temp.body.moves = true;
-            if (temp.x < 120 && temp.y < 120)
+            if (temp.x < 240 && temp.y < 120) {
+                killed = true;
                 temp.kill();
+            }
         };
         return Level;
     })(Phaser.State);
@@ -142,6 +159,9 @@ var Wallaby;
         Preloader.prototype.preload = function () {
             this.game.load.image('turtle', 'assets/turtle.png');
             this.game.load.image('zone', 'assets/zone.png');
+            this.game.load.image('quit', 'assets/quit.png');
+            this.game.load.image('playAgain', 'assets/play_again.png');
+            this.game.load.image('victoryBackground', 'assets/victory_background.png');
         };
 
         Preloader.prototype.create = function () {
@@ -154,6 +174,60 @@ var Wallaby;
         return Preloader;
     })(Phaser.State);
     Wallaby.Preloader = Preloader;
+})(Wallaby || (Wallaby = {}));
+var Wallaby;
+(function (Wallaby) {
+    var Victory = (function (_super) {
+        __extends(Victory, _super);
+        function Victory() {
+            _super.apply(this, arguments);
+            this.finalScore = 0;
+            this.highScore = 0;
+        }
+        Victory.prototype.init = function (score, game) {
+            this.finalScore = score;
+            this.game = game;
+        };
+
+        Victory.prototype.create = function () {
+            this.victoryBackground = new Phaser.Sprite(this.game, 225, 0, 'victoryBackground');
+            this.victoryBackground.visible = true;
+            this.victoryBackground.fixedToCamera = true;
+            this.game.add.existing(this.victoryBackground);
+
+            this.playAgain = new Phaser.Button(this.game, 300, 300, 'playAgain');
+            this.playAgain.visible = true;
+            this.playAgain.fixedToCamera = true;
+            this.playAgain.inputEnabled = true;
+            this.game.add.existing(this.playAgain);
+            this.playAgain.events.onInputDown.add(function () {
+                this.victoryBackground.visible = false;
+                this.playAgain.visible = false;
+                this.game.state.start('Level', true, false);
+            }, this);
+
+            if (this.finalScore > this.highScore) {
+                this.highScore = this.finalScore;
+            }
+
+            this.scoreText = this.game.add.text(this.game.world.x + 350, 85, 'Shells: ' + this.finalScore, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 });
+            this.highScoreText = this.game.add.text(this.game.world.x + 350, 115, 'High Score: ' + this.highScore, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 });
+        };
+
+        Victory.prototype.update = function () {
+        };
+        Victory.prototype.displayFinal = function () {
+        };
+
+        Victory.prototype.startGame = function () {
+            console.log("HI");
+            this.victoryBackground.visible = false;
+            this.playAgain.visible = false;
+            this.game.state.start('Level', true, false);
+        };
+        return Victory;
+    })(Phaser.State);
+    Wallaby.Victory = Victory;
 })(Wallaby || (Wallaby = {}));
 window.onload = function () {
     var game = new Wallaby.Game();

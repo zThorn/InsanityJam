@@ -1,4 +1,5 @@
 ﻿module Wallaby {
+    var killed;
     export class Level extends Phaser.State {
         turtles: Phaser.Group;
         turtle: Phaser.Sprite;
@@ -6,12 +7,15 @@
 
         txt: Phaser.Group;
         timeText:Phaser.Text;
-        shellsCollected: Phaser.Text;
+        shellsCollected: number;
+        shellText: Phaser.Text;
 
         initialTime: number;
-      
+        levelOver: boolean;
+        killed: boolean;
 
         create() {
+            killed = false;
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
             this.zoneSprite = this.game.add.sprite(0,0,'zone');
             this.zoneSprite.visible = true;
@@ -20,6 +24,7 @@
 
             this.turtles = this.game.add.group();
             this.txt = this.game.add.group();
+
 
             for (var i = 0; i < 30; i++) {
                 this.turtle = this.turtles.create(this.game.rnd.integerInRange(100, 700), this.game.rnd.integerInRange(100, 400), 'turtle');
@@ -37,20 +42,33 @@
 
             this.turtles.callAll('events.onInputDown.add', 'events.onInputDown',this.endDrag );
             this.turtles.callAll('events.onInputUp.add', 'events.onInputUp', this.removeCheck)
-
+            this.shellsCollected = 0;
 
             
             this.txt.fixedToCamera = true;
             this.initialTime = this.game.time.now;
             this.timeText = this.game.add.text(this.game.world.x, 0,'Time: '+this.initialTime, {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
+            this.shellText = this.game.add.text(this.game.world.x, 40,'Shells: ', {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
             this.txt.bringToTop(true);
+            this.levelOver = false;
 
         }
 
         update() {
-            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime)/1000).toString()+":");
+
+            this.timeText.setText(Math.floor(this.game.time.elapsedSince(this.initialTime)/1000).toString());
             this.game.physics.arcade.collide(this.turtles);
             this.game.physics.arcade.collide(this.turtles,this.zoneSprite);
+            this.shellText.setText("Shells: "+this.shellsCollected);
+
+            if(this.game.time.elapsedSince(this.initialTime)/1000 >= 30)
+                this.game.state.start('Victory',true,false,this.shellsCollected, this.game);
+
+            if(killed){
+                killed = false;
+                this.shellsCollected++;
+                console.log(this.shellsCollected);
+            }
           
         }
         startDrag(){
@@ -64,8 +82,11 @@
 
         removeCheck(temp){
             temp.body.moves = true;
-             if(temp.x < 120 && temp.y <120)
+             if(temp.x < 240 && temp.y <120){
+                    killed = true;          
                     temp.kill();
+
+             }
         }
 
 
