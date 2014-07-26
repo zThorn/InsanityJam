@@ -4,7 +4,7 @@
         turtles: Phaser.Group;
         turtle: Phaser.Sprite;
         zoneSprite: Phaser.Sprite;
-
+        gameBackground: Phaser.Sprite;
         txt: Phaser.Group;
         timeText:Phaser.Text;
         shellsCollected: number;
@@ -17,7 +17,10 @@
         create() {
             killed = false;
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
-            this.zoneSprite = this.game.add.sprite(0,0,'zone');
+           
+            this.gameBackground = this.game.add.sprite(0,0,'background');
+            this.zoneSprite = this.game.add.sprite(5,5,'nudeTurtle');
+            this.gameBackground.visible = true;
             this.zoneSprite.visible = true;
             this.game.physics.enable(this.zoneSprite,Phaser.Physics.ARCADE);
             this.zoneSprite.body.immovable = true;
@@ -47,8 +50,8 @@
             
             this.txt.fixedToCamera = true;
             this.initialTime = this.game.time.now;
-            this.timeText = this.game.add.text(this.game.world.x, 0,'Time: '+this.initialTime, {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
-            this.shellText = this.game.add.text(this.game.world.x, 40,'Shells: ', {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
+            this.timeText = this.game.add.text(this.game.world.x+775, 0,'Time: '+this.initialTime, {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
+            this.shellText = this.game.add.text(this.game.world.x, 550,'Shells: ', {fontSize: '32px', fill:'white', stroke: 'black',strokeThickness: 5}, this.txt);
             this.txt.bringToTop(true);
             this.levelOver = false;
 

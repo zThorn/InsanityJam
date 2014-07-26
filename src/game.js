@@ -60,7 +60,10 @@ var Wallaby;
         Level.prototype.create = function () {
             killed = false;
             this.game.physics.startSystem(Phaser.Physics.ARCADE);
-            this.zoneSprite = this.game.add.sprite(0, 0, 'zone');
+
+            this.gameBackground = this.game.add.sprite(0, 0, 'background');
+            this.zoneSprite = this.game.add.sprite(5, 5, 'nudeTurtle');
+            this.gameBackground.visible = true;
             this.zoneSprite.visible = true;
             this.game.physics.enable(this.zoneSprite, Phaser.Physics.ARCADE);
             this.zoneSprite.body.immovable = true;
@@ -88,8 +91,8 @@ var Wallaby;
 
             this.txt.fixedToCamera = true;
             this.initialTime = this.game.time.now;
-            this.timeText = this.game.add.text(this.game.world.x, 0, 'Time: ' + this.initialTime, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 }, this.txt);
-            this.shellText = this.game.add.text(this.game.world.x, 40, 'Shells: ', { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 }, this.txt);
+            this.timeText = this.game.add.text(this.game.world.x + 775, 0, 'Time: ' + this.initialTime, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 }, this.txt);
+            this.shellText = this.game.add.text(this.game.world.x, 550, 'Shells: ', { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 }, this.txt);
             this.txt.bringToTop(true);
             this.levelOver = false;
         };
@@ -136,14 +139,25 @@ var Wallaby;
             _super.apply(this, arguments);
         }
         MainMenu.prototype.create = function () {
-            this.startGame();
+            this.menuBackground = new Phaser.Sprite(this.game, 225, 0, 'menuBackground');
+            this.menuBackground.visible = true;
+            this.menuBackground.fixedToCamera = true;
+            this.game.add.existing(this.menuBackground);
+
+            this.play = new Phaser.Button(this.game, 300, 300, 'play');
+            this.play.visible = true;
+            this.play.fixedToCamera = true;
+            this.play.inputEnabled = true;
+            console.log("pls");
+            this.game.add.existing(this.play);
+            this.play.events.onInputDown.add(function () {
+                this.menuBackground.visible = false;
+                this.play.visible = false;
+                this.game.state.start('Level', true, false);
+            }, this);
         };
 
-        MainMenu.prototype.fadeOut = function () {
-        };
-
-        MainMenu.prototype.startGame = function () {
-            this.game.state.start('Level', true, false);
+        MainMenu.prototype.update = function () {
         };
         return MainMenu;
     })(Phaser.State);
@@ -158,10 +172,13 @@ var Wallaby;
         }
         Preloader.prototype.preload = function () {
             this.game.load.image('turtle', 'assets/turtle.png');
-            this.game.load.image('zone', 'assets/zone.png');
+            this.game.load.image('nudeTurtle', 'assets/turtle_nude.png');
             this.game.load.image('quit', 'assets/quit.png');
             this.game.load.image('playAgain', 'assets/play_again.png');
             this.game.load.image('victoryBackground', 'assets/victory_background.png');
+            this.game.load.image('menuBackground', 'assets/menu_background.png');
+            this.game.load.image('play', 'assets/play.png');
+            this.game.load.image('background', 'assets/background.png');
         };
 
         Preloader.prototype.create = function () {
@@ -203,6 +220,7 @@ var Wallaby;
             this.playAgain.events.onInputDown.add(function () {
                 this.victoryBackground.visible = false;
                 this.playAgain.visible = false;
+                this.quitButton.visible = false;
                 this.game.state.start('Level', true, false);
             }, this);
 
@@ -210,6 +228,17 @@ var Wallaby;
                 this.highScore = this.finalScore;
             }
 
+            this.quitButton = new Phaser.Button(this.game, 300, 400, 'quit');
+            this.quitButton.visible = true;
+            this.quitButton.fixedToCamera = true;
+            this.quitButton.inputEnabled = true;
+            this.quitButton.events.onInputDown.add(function () {
+                this.victoryBackground.visible = false;
+                this.playAgain.visible = false;
+                this.quitButton.visible = false;
+                this.game.state.start('MainMenu', true, false);
+            }, this);
+            this.game.add.existing(this.quitButton);
             this.scoreText = this.game.add.text(this.game.world.x + 350, 85, 'Shells: ' + this.finalScore, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 });
             this.highScoreText = this.game.add.text(this.game.world.x + 350, 115, 'High Score: ' + this.highScore, { fontSize: '32px', fill: 'white', stroke: 'black', strokeThickness: 5 });
         };
